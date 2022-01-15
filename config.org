@@ -1,5 +1,7 @@
 #+PROPERTY: header-args :mkdirp yes
-
+* MISC
+快捷键 C-. 被微软输入法占用了，导致微软输入法状态下 imenu 快捷键没法用
+  
 * init.el
   
   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -19,12 +21,16 @@
 
     (defun open-init-file ()
       (interactive)
-      (find-file "~/.emacs.d/init.el"))
+      (find-file "~/config.org"))
+
+    (use-package imenu
+      :bind (("C-." . imenu)))
 
     (global-set-key (kbd "<f2>") 'open-init-file)
 
     ;;(fido-mode t)
 
+    (require 'init-ui)
     (require 'init-org)
     (require 'init-elpa)
     (require 'init-completion)
@@ -81,15 +87,21 @@
     (use-package counsel
       :diminish ivy-mode counsel-mode
       :bind (("C-s" . swiper-isearch)
-	     ("C-r" . swiper-isearch-backward)
-	     )
+	     ("C-r" . swiper-isearch-backward))
       :hook ((after-init . ivy-mode)
 	     (ivy-mode . counsel-mode))
       :init
       (setq ivy-count-format "%d/%d "
 	    ivy-use-virtual-buffers t
-	   ))
+	    ivy-initial-inputs-alist nil))
 
     (provide 'init-completion)
+
+  #+end_src
+
+* init-ui
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+
+    (provide 'init-ui)
 
   #+end_src
