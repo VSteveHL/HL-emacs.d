@@ -1,11 +1,4 @@
 #+PROPERTY: header-args :mkdirp yes
-* MISC
-快捷键 C-. 被微软输入法占用了，导致微软输入法状态下 imenu 快捷键没法用
-
-* TODO [0/1]
-  - [ ] posframe, ivy-posframe
-
-
   
 * COMMENT early-init.el
   #+begin_src emacs-lisp :tangle ~/.emacs.d/early-init.el
@@ -18,17 +11,18 @@
   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
     (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
 
-    (defun open-init-file ()
-      (interactive)
-      (find-file "~/config.org"))
-
     (use-package imenu
       :bind (("C-." . imenu)))
+
+    (defun open-init-file ()
+      (interactive)
+      (find-file "~/HL-emacs.d/config.org"))
 
     (global-set-key (kbd "<f2>") 'open-init-file)
 
     ;;(fido-mode t)
 
+    (require 'init-edit)
     (require 'init-ui)
     (require 'init-org)
     (require 'init-elpa)
@@ -106,7 +100,7 @@
     (global-linum-mode 1)
     (scroll-bar-mode -1)
     (setq cursor-type 'bar)
-    (provide 'init-ui)
+
     (setq inhibit-splash-screen 1)
 
     (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
@@ -114,6 +108,8 @@
     (add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
     (add-to-list 'default-frame-alist '(width . 85))
     (add-to-list 'default-frame-alist '(height . 28))
+
+    (provide 'init-ui)
 
   #+end_src
 
@@ -123,5 +119,23 @@
     (use-package which-key
       :hook (after-init . which-key-mode))
 
+    (use-package magit
+      :bind (("C-x g" . magit-status)))
+
     (provide 'init-utils) 
+  #+end_src
+
+  
+* init-edit
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
+    (use-package undo-tree
+      :diminish
+      :hook (after-init . global-undo-tree-mode)
+      :init
+      (setq undo-tree-visualizer-timestamps t
+	    undo-tree-enable-undo-in-region nil
+	    undo-tree-auto-save-history nil))
+  
+
+    (provide 'init-edit)
   #+end_src
