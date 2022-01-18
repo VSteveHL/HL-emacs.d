@@ -103,11 +103,17 @@
 
     (setq inhibit-splash-screen 1)
 
+    (fset 'yes-or-no-p 'y-or-n-p)
+
     (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
 
     (add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
     (add-to-list 'default-frame-alist '(width . 85))
     (add-to-list 'default-frame-alist '(height . 28))
+
+    (setq-default c-basic-offset   4
+          tab-width        4
+          indent-tabs-mode nil)
 
     (provide 'init-ui)
 
