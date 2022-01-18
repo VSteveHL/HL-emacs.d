@@ -1,3 +1,3 @@
 # HL-emacs.d
 
-折腾
+正在抄 Centaur Emacs https://seagle0128.github.io/.emacs.d/
