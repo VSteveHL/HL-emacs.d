@@ -11,6 +11,8 @@
   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
     (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
 
+    (prefer-coding-system 'utf-8)
+
     (use-package imenu
       :bind (("C-." . imenu)))
 
@@ -22,24 +24,51 @@
 
     ;;(fido-mode t)
 
-    (require 'init-edit)
-    (require 'init-ui)
-    (require 'init-org)
-    (require 'init-elpa)
     (require 'init-completion)
+    (require 'init-edit)
+    (require 'init-elpa)
+    (require 'init-markdown)
+    (require 'init-org)
+    (require 'init-ui)
     (require 'init-utils)
 
   #+end_src
   
-* init-org
+* init-completion
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-completion.el
+    (use-package company
+      :diminish
+      :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
+      :hook (after-init . global-company-mode))
 
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    (use-package counsel
+      :diminish ivy-mode counsel-mode
+      :bind (("C-s" . swiper-isearch)
+	     ("C-r" . swiper-isearch-backward))
+      :hook ((after-init . ivy-mode)
+	     (ivy-mode . counsel-mode))
+      :init
+      (setq ivy-count-format "%d/%d "
+	    ivy-use-virtual-buffers t
+	    ivy-initial-inputs-alist nil))
 
-    (require 'org-tempo)
+    (provide 'init-completion)
 
-    (provide 'init-org)
   #+end_src
 
+* init-edit
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
+    (use-package undo-tree
+      :diminish
+      :hook (after-init . global-undo-tree-mode)
+      :init
+      (setq undo-tree-visualizer-timestamps t
+	    undo-tree-enable-undo-in-region nil
+	    undo-tree-auto-save-history nil))
+  
+
+    (provide 'init-edit)
+  #+end_src
 * init-elpa
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-elpa.el
     (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
@@ -66,31 +95,24 @@
 
 
     (provide 'init-elpa)
-
-
   #+end_src
-
   
-* init-completion
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-completion.el
-    (use-package company
-      :diminish
-      :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
-      :hook (after-init . global-company-mode))
+* init-markdown
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-markdown.el
+    (use-package markdown-mode
+      :mode (("README\\.md\\'" . gfm-mode)
+             ("\\.md\\'" . markdown-mode)))
 
-    (use-package counsel
-      :diminish ivy-mode counsel-mode
-      :bind (("C-s" . swiper-isearch)
-	     ("C-r" . swiper-isearch-backward))
-      :hook ((after-init . ivy-mode)
-	     (ivy-mode . counsel-mode))
-      :init
-      (setq ivy-count-format "%d/%d "
-	    ivy-use-virtual-buffers t
-	    ivy-initial-inputs-alist nil))
+    (provide 'init-markdown)
+  #+end_src
+  
+* init-org
 
-    (provide 'init-completion)
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
 
+    (require 'org-tempo)
+
+    (provide 'init-org)
   #+end_src
 
 * init-ui
@@ -130,18 +152,4 @@
 
     (provide 'init-utils) 
   #+end_src
-
   
-* init-edit
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
-    (use-package undo-tree
-      :diminish
-      :hook (after-init . global-undo-tree-mode)
-      :init
-      (setq undo-tree-visualizer-timestamps t
-	    undo-tree-enable-undo-in-region nil
-	    undo-tree-auto-save-history nil))
-  
-
-    (provide 'init-edit)
-  #+end_src
