@@ -10,6 +10,7 @@
   - magit  https://magit.vc/
   - undo-tree  https://www.dr-qubit.org/undo-tree.html
   - markdown-mode http://jblevins.org/projects/markdown-mode/
+  - auctex https://www.gnu.org/software/auctex/
 
 * 配置  
 主要在抄 [[https://seagle0128.github.io/.emacs.d/][Centaur Emacs]]

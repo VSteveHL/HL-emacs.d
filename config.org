@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#+STARTUP: overview
 #+PROPERTY: header-args :mkdirp yes
   
 * COMMENT early-init.el
@@ -21,7 +23,7 @@
       (find-file "~/HL-emacs.d/config.org"))
 
     (global-set-key (kbd "<f2>") 'open-init-file)
-
+    (global-set-key (kbd "<f5>") 'revert-buffer)
     ;;(fido-mode t)
 
     (require 'init-completion)
@@ -103,6 +105,12 @@
       :mode (("README\\.md\\'" . gfm-mode)
              ("\\.md\\'" . markdown-mode)))
 
+    (use-package auctex)
+
+    (add-hook 'LaTeX-mode-hook
+              (lambda ()
+                (setq TeX-engine 'xetex)))
+
     (provide 'init-markdown)
   #+end_src
   
@@ -111,6 +119,12 @@
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
 
     (require 'org-tempo)
+    (setq org-export-backends '(latex md html ascii))
+    (setq system-time-locale "C")
+    (global-set-key (kbd "C-c l") #'org-store-link)
+    (global-set-key (kbd "C-c a") #'org-agenda)
+    (global-set-key (kbd "C-c c") #'org-capture)
+
 
     (provide 'init-org)
   #+end_src
