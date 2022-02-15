@@ -143,6 +143,7 @@
     (global-set-key (kbd "C-c a") #'org-agenda)
     ;; (global-set-key (kbd "C-c c") #'org-capture)
 
+    (setq org-startup-indented t)
 
     (require 'epa-file)
     (epa-file-enable)
@@ -154,14 +155,29 @@
     (setq org-tags-exclude-from-inheritance '("crypt"))
     (setq org-crypt-key nil)
 
+    ;;(use-package org-roam
+    ;;  :ensure t
+    ;;  :custom
+    ;;  (org-roam-directory (file-truename "~/org-roam/"))
+    ;;  :bind (("C-c n l" . org-roam-buffer-toggle)
+    ;;         ("C-c n f" . org-roam-node-find)
+    ;;         ("C-c n g" . org-roam-graph)
+    ;;         ("C-c n i" . org-roam-node-insert)
+    ;;         ("C-c n c" . org-roam-capture)
+    ;;         ;; Dailies
+    ;;         ("C-c n j" . org-roam-dailies-capture-today))
+    ;;  :config (org-roam-db-autosync-enable))
+
+
     (provide 'init-org)
   #+end_src
 
 * init-ui
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
     (setq ring-bell-function 'ignore)
+    (global-display-line-numbers-mode)
     (tool-bar-mode 0)
-    (global-linum-mode 1)
+    ;;(global-linum-mode 1)
     (scroll-bar-mode -1)
     (setq cursor-type 'bar)
 
@@ -171,13 +187,24 @@
 
     (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
 
-    (add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
-    (add-to-list 'default-frame-alist '(width . 85))
+    (setq default-frame-alist '((font . "JetBrains Mono-16")))
+    (set-face-attribute 'default nil :font "JetBrains Mono-16")
+    ;;(set-fontset-font "fontset-default" 'han "微软雅黑")
+    (set-fontset-font "fontset-default" 'han "霞鹜文楷")
+
+    ;;(add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
+    (add-to-list 'default-frame-alist '(width . 90))
     (add-to-list 'default-frame-alist '(height . 28))
 
+
+
+    ;; 这是一行中文
+    ;;(use-package cnfonts
+    ;;  :hook (after-init . cnfonts-mode))
+
     (setq-default c-basic-offset   4
-          tab-width        4
-          indent-tabs-mode nil)
+                  tab-width        4
+                  indent-tabs-mode nil)
 
     (provide 'init-ui)
 
@@ -196,9 +223,19 @@
   #+end_src
   
 * runemacs.bat
+最开始的方案是在bat文件里指定HOME目录
   #+begin_src
 set HOME=C:\Users\<username>
 "C:\portable\emacs-27.2-x86_64\bin\runemacs.exe"
   #+end_src
 
+后来想切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
+#+begin_src
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+
+run C:\portable\emacs-27.2-x86_64\bin\runemacs.exe --daemon, ,Hide
+#+end_src
 
