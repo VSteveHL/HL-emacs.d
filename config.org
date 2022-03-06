@@ -13,6 +13,7 @@
   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
     (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
     (setq default-directory "~/")
+    (setq delete-by-moving-to-trash t)
 
     (prefer-coding-system 'utf-8)
 
@@ -22,9 +23,8 @@
 
     (global-set-key (kbd "<f2>") 'open-init-file)
     (global-set-key (kbd "<f5>") 'revert-buffer)
+    (global-set-key (kbd "C-x C-b") 'ibuffer)
     ;;(fido-mode t)
-
-    (setq auto-save-default nil)
 
     (require 'init-elpa)
 
@@ -62,20 +62,16 @@
 
 * init-edit
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
-    (use-package imenu
-		 :bind (("C-." . imenu)))
+    ;; (use-package imenu
+    ;; 	 :bind (("C-." . imenu)))
 
     (use-package undo-tree
-		 :diminish
-		 :hook (after-init . global-undo-tree-mode)
-		 :init
-		 (setq undo-tree-visualizer-timestamps t
-		       undo-tree-enable-undo-in-region nil
-		       undo-tree-auto-save-history nil))
-
-    (use-package evil)
-    ;;      :hook (after-init . evil-mode))
-
+         :diminish
+         :hook (after-init . global-undo-tree-mode)
+         :init
+         (setq undo-tree-visualizer-timestamps t
+               undo-tree-enable-undo-in-region nil
+               undo-tree-auto-save-history nil))
 
     (provide 'init-edit)
   #+end_src
@@ -125,9 +121,10 @@
 
     (use-package auctex)
 
-    (add-hook 'LaTeX-mode-hook
-              (lambda ()
-                (setq TeX-engine 'xetex)))
+    (setq-default TeX-engine 'xetex)
+    ;; (add-hook 'LaTeX-mode-hook
+    ;;           (lambda ()
+    ;;             (setq TeX-engine 'xetex)))
 
     (provide 'init-markdown)
   #+end_src
@@ -135,39 +132,46 @@
 * init-org
 
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    ;; org variable
+    (setq org-startup-truncated nil)
+    (setq org-log-done 'time)
+    (setq org-log-into-drawer t)
+    (setq org-agenda-include-diary t)
+    (setq system-time-locale "C")
+    (setq org-startup-indented t)
 
+    ;; calendar and diary
+    (setq calendar-date-style 'iso)
+    (setq diary-show-holidays-flag nil)
+
+    ;; org agenda
+    (setq org-agenda-files '("~/GTD/inbox.org"
+                             "~/GTD/task.org"
+                             "~/GTD/schedule.org"
+                             "~/GTD/relax.org"
+                             "~/GTD/habit.org"))
+
+    ;; org export
     (require 'org-tempo)
     (setq org-export-backends '(latex md html ascii))
-    (setq system-time-locale "C")
+
+    ;; key bind
     ;; (global-set-key (kbd "C-c l") #'org-store-link)
     (global-set-key (kbd "C-c a") #'org-agenda)
     ;; (global-set-key (kbd "C-c c") #'org-capture)
 
-    (setq org-startup-indented t)
+    ;; epa
+    ;; (require 'epa-file)
+    ;; (epa-file-enable)
+    ;; (setq epa-file-encrypt-to nil
+    ;;       epa-file-cache-passphrase-for-symmetric-encryption t)
 
-    (require 'epa-file)
-    (epa-file-enable)
-    (setq epa-file-encrypt-to nil
-          epa-file-cache-passphrase-for-symmetric-encryption t)
-
-    (require 'org-crypt)
-    (org-crypt-use-before-save-magic)
-    (setq org-tags-exclude-from-inheritance '("crypt"))
-    (setq org-crypt-key nil)
-
-    ;;(use-package org-roam
-    ;;  :ensure t
-    ;;  :custom
-    ;;  (org-roam-directory (file-truename "~/org-roam/"))
-    ;;  :bind (("C-c n l" . org-roam-buffer-toggle)
-    ;;         ("C-c n f" . org-roam-node-find)
-    ;;         ("C-c n g" . org-roam-graph)
-    ;;         ("C-c n i" . org-roam-node-insert)
-    ;;         ("C-c n c" . org-roam-capture)
-    ;;         ;; Dailies
-    ;;         ("C-c n j" . org-roam-dailies-capture-today))
-    ;;  :config (org-roam-db-autosync-enable))
-
+    ;; org-crypt
+    ;; (require 'org-crypt)
+    ;; (org-crypt-use-before-save-magic)
+    ;; (setq auto-save-default nil)
+    ;; (setq org-tags-exclude-from-inheritance '("crypt"))
+    ;; (setq org-crypt-key nil)
 
     (provide 'init-org)
   #+end_src
@@ -179,11 +183,17 @@
     (tool-bar-mode 0)
     ;;(global-linum-mode 1)
     (scroll-bar-mode -1)
-    (setq cursor-type 'bar)
+    (setq-default cursor-type 'bar)
+
+    (setq show-paren-delay 0)
+    (show-paren-mode 1)
+
+    (winner-mode 1)
 
     (setq inhibit-splash-screen 1)
 
     (fset 'yes-or-no-p 'y-or-n-p)
+    (define-key y-or-n-p-map [return] 'act)
 
     (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
 
@@ -195,8 +205,6 @@
     ;;(add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
     (add-to-list 'default-frame-alist '(width . 90))
     (add-to-list 'default-frame-alist '(height . 28))
-
-
 
     ;; 这是一行中文
     ;;(use-package cnfonts
@@ -229,7 +237,7 @@ set HOME=C:\Users\<username>
 "C:\portable\emacs-27.2-x86_64\bin\runemacs.exe"
   #+end_src
 
-后来想切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
+后来切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
 #+begin_src
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
