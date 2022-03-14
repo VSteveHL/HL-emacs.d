@@ -16,6 +16,8 @@
     (setq delete-by-moving-to-trash t)
 
     (prefer-coding-system 'utf-8)
+    (set-language-environment "UTF-8")
+    (set-keyboard-coding-system 'utf-8)
 
     (defun open-init-file ()
       (interactive)
@@ -33,8 +35,10 @@
     ;; (require 'init-lsp)
     (require 'init-markdown)
     (require 'init-org)
+    (require 'init-program)
     (require 'init-ui)
     (require 'init-utils)
+
 
   #+end_src
   
@@ -43,18 +47,32 @@
     (use-package company
       :diminish
       :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
-      :hook (after-init . global-company-mode))
+      :hook (after-init . global-company-mode)
+      :bind (("C-c i c" . company-complete)
+             ("C-c i f" . company-files)))
+
+    ;; (global-set-key (kbd "C-c c f") 'company-complete)
+
+    ;; (use-package company-fuzzy
+    ;;   :hook (after-init . global-company-fuzzy-mode)
+    ;;   :init
+    ;;   (setq company-fuzzy-sorting-backend 'alphabetic
+    ;;         company-fuzzy-prefix-on-top nil
+    ;;         company-fuzzy-history-backends '(company-yasnippet)
+    ;;         company-fuzzy-trigger-symbols '("." "->" "<" "\"" "'" "@")))
+    ;; (global-company-fuzzy-mode 1)
 
     (use-package counsel
       :diminish ivy-mode counsel-mode
       :bind (("C-s" . swiper-isearch)
-	     ("C-r" . swiper-isearch-backward))
+             ("C-r" . swiper-isearch-backward)
+             ("M-s g" . counsel-rg))
       :hook ((after-init . ivy-mode)
-	     (ivy-mode . counsel-mode))
+             (ivy-mode . counsel-mode))
       :init
       (setq ivy-count-format "%d/%d "
-	    ivy-use-virtual-buffers t
-	    ivy-initial-inputs-alist nil))
+            ivy-use-virtual-buffers t
+            ivy-initial-inputs-alist nil))
 
     (provide 'init-completion)
 
@@ -121,6 +139,8 @@
 
     (use-package auctex)
 
+    (use-package cdlatex)
+
     (setq-default TeX-engine 'xetex)
     ;; (add-hook 'LaTeX-mode-hook
     ;;           (lambda ()
@@ -140,6 +160,11 @@
     (setq system-time-locale "C")
     (setq org-startup-indented t)
 
+    ;; key bind
+    ;; (global-set-key (kbd "C-c l") #'org-store-link)
+    (global-set-key (kbd "C-c a") #'org-agenda)
+    (global-set-key (kbd "C-c c") #'org-capture)
+
     ;; calendar and diary
     (setq calendar-date-style 'iso)
     (setq diary-show-holidays-flag nil)
@@ -148,17 +173,45 @@
     (setq org-agenda-files '("~/GTD/inbox.org"
                              "~/GTD/task.org"
                              "~/GTD/schedule.org"
-                             "~/GTD/relax.org"
                              "~/GTD/habit.org"))
+
+    ;; org capture
+    (setq org-default-notes-file "~/GTD/inbox.org")
+    (setq org-capture-templates
+      '(("t" "Todo" entry (file "~/gtd/task.org")
+         "* TODO %?\n%i\n%a")
+        ("i" "inbox" item (file "~/gtd/inbox.org")
+         "")
+        ("l" "send to log" entry (file "~/gtd/temp.org")
+         "%c" :immediate-finish t)))
+
+    ;; org-roam
+    (use-package org-roam
+      :ensure t
+      :custom
+      (org-roam-directory (file-truename "~/roam/"))
+      :bind (("C-c n l" . org-roam-buffer-toggle)
+             ("C-c n f" . org-roam-node-find)
+             ("C-c n g" . org-roam-graph)
+             ("C-c n i" . org-roam-node-insert)
+             ("C-c n c" . org-roam-capture)
+             ;; Dailies
+             ("C-c n j" . org-roam-dailies-capture-today))
+      :config
+      ;; If you're using a vertical completion framework, you might want a more informative completion interface
+      (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+      (org-roam-db-autosync-mode)
+      ;; If using org-roam-protocol
+      (require 'org-roam-protocol))
+
+    ;; org-habit
+    (require 'org-habit)
+    (setq org-habit-preceding-days 10
+          org-habit-following-days 4)
 
     ;; org export
     (require 'org-tempo)
     (setq org-export-backends '(latex md html ascii))
-
-    ;; key bind
-    ;; (global-set-key (kbd "C-c l") #'org-store-link)
-    (global-set-key (kbd "C-c a") #'org-agenda)
-    ;; (global-set-key (kbd "C-c c") #'org-capture)
 
     ;; epa
     ;; (require 'epa-file)
@@ -173,9 +226,50 @@
     ;; (setq org-tags-exclude-from-inheritance '("crypt"))
     ;; (setq org-crypt-key nil)
 
+
+
     (provide 'init-org)
   #+end_src
 
+* init-program
+** projectile
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+    (use-package projectile
+      :init
+      (projectile-mode +1)
+      :bind (:map projectile-mode-map
+                  ("C-c p" . projectile-command-map)))
+  #+end_src
+** yasnippet
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package yasnippet
+    :bind
+    (("C-c y n" . yas-new-snippet)
+     ("C-c y s" . yas-insert-snippet)
+     ("C-c y v" . yas-visit-snippet-file))
+    :init
+    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+    :config
+    (yas-global-mode 1))
+
+#+end_src
+** COMMENT python
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (setq python-shell-interpreter "ipython"
+        python-shell-interpreter-args "-i --simple-prompt")
+
+  (use-package elpy
+    :init
+    (elpy-enable))
+
+  (add-hook 'elpy-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'elpy-yapf-fix-code nil t)))
+#+end_src
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (provide 'init-program)
+#+end_src
 * init-ui
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
     (setq ring-bell-function 'ignore)
@@ -192,8 +286,9 @@
 
     (setq inhibit-splash-screen 1)
 
-    (fset 'yes-or-no-p 'y-or-n-p)
+    ;; (fset 'yes-or-no-p 'y-or-n-p)
     (define-key y-or-n-p-map [return] 'act)
+    (setq use-short-answers t)
 
     (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
 
@@ -220,8 +315,15 @@
 
 * init-utils
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+    (use-package rg)
+
+    (use-package hungry-delete
+      :bind
+      (("C-c d" . hungry-delete-forward)
+       ("C-c DEL" . hungry-delete-backward)))
 
     (use-package which-key
+      :diminish
       :hook (after-init . which-key-mode))
 
     (use-package magit
@@ -238,12 +340,27 @@ set HOME=C:\Users\<username>
   #+end_src
 
 后来切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
+(此时也切换到了gccemacs，windows版本在这里下载 https://github.com/kiennq/emacs-build)
 #+begin_src
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-run C:\portable\emacs-27.2-x86_64\bin\runemacs.exe --daemon, ,Hide
+run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
 #+end_src
+
+在守护进程运行之后，将emacsclientw.exe右键发送到桌面快捷方式，之后在 属性-目标 中加上 -c 即可
+
+* yasnippet
+#+begin_src text :tangle ~/.emacs.d/snippets/org-mode/init-tangle
+  # -*- mode: snippet -*-
+  # name: init-tangle
+  # key: init
+  # --
+
+    ,#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/$1
+    $0
+    ,#+end_src
+  #+end_src
 
