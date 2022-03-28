@@ -1,16 +1,2 @@
 * HL-emacs.d
-  从头开始抄配置
-
-* 已经使用的包(按照时间顺序)
-  - use-package  https://github.com/jwiegley/use-package
-  - company  https://company-mode.github.io/
-  - ivy/counsel/swiper  https://github.com/abo-abo/swiper
-  - imenu  内置
-  - which-key  https://github.com/justbur/emacs-which-key
-  - magit  https://magit.vc/
-  - undo-tree  https://www.dr-qubit.org/undo-tree.html
-  - markdown-mode http://jblevins.org/projects/markdown-mode/
-  - auctex https://www.gnu.org/software/auctex/
-
-* 配置  
-主要在抄 [[https://seagle0128.github.io/.emacs.d/][Centaur Emacs]]
+一点一点攒配置
