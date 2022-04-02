@@ -9,103 +9,59 @@
     (push '(vertical-scroll-bars) default-frame-alist)
   #+end_src
 * init.el
-  
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (setq user-full-name "VSteveHL")
-    (setq user-mail-address "vstevehl@163.com")
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
 
-    (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
-    (setq default-directory "~/")
-    (setq delete-by-moving-to-trash t)
-
-    (prefer-coding-system 'utf-8)
-    (set-language-environment "UTF-8")
-    (set-keyboard-coding-system 'utf-8)
-
-    ;; (setq make-backup-files nil)
-
-    (defun open-init-file ()
-      (interactive)
-      (find-file "~/HL-emacs.d/config.org"))
-
-    (global-set-key (kbd "<f2>") 'open-init-file)
-    (global-set-key (kbd "<f5>") 'revert-buffer)
-    (global-set-key (kbd "C-x C-b") 'ibuffer)
-    ;;(fido-mode t)
-
-    (require 'init-elpa)
-
-    (require 'init-completion)
-    (require 'init-edit)
-    ;; (require 'init-lsp)
-    (require 'init-markdown)
-    (require 'init-org)
-    (require 'init-program)
-    (require 'init-ui)
-    (require 'init-utils)
-
-
-  #+end_src
-  
-* init-completion
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-completion.el
-    (use-package company
-      :diminish
-      :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
-      :hook (after-init . global-company-mode)
-      :bind (("C-M-i" . company-complete)
-             ("C-c i c" . company-complete)
-             ("C-c i f" . company-files)))
-
-    ;; (global-set-key (kbd "C-c c f") 'company-complete)
-
-    ;; (use-package company-fuzzy
-    ;;   :hook (after-init . global-company-fuzzy-mode)
-    ;;   :init
-    ;;   (setq company-fuzzy-sorting-backend 'alphabetic
-    ;;         company-fuzzy-prefix-on-top nil
-    ;;         company-fuzzy-history-backends '(company-yasnippet)
-    ;;         company-fuzzy-trigger-symbols '("." "->" "<" "\"" "'" "@")))
-    ;; (global-company-fuzzy-mode 1)
-
-    (use-package counsel
-      :diminish ivy-mode counsel-mode
-      :bind (("C-s" . swiper-isearch)
-             ("C-r" . swiper-isearch-backward)
-             ("M-s g" . counsel-rg))
-      :hook ((after-init . ivy-mode)
-             (ivy-mode . counsel-mode))
-      :init
-      (setq ivy-count-format "%d/%d "
-            ivy-use-virtual-buffers t
-            ivy-initial-inputs-alist nil))
-
-    (provide 'init-completion)
-
+      (require 'init-startup)
+      (require 'init-elpa)
+      (require 'init-org)
+      (require 'init-utils)
+      (require 'init-tools)
+      (require 'init-program)
+      (require 'init-ui)
   #+end_src
 
-* init-edit
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
-    ;; (use-package imenu
-    ;; 	 :bind (("C-." . imenu)))
+* init-startup
+** coding-system
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
+  (prefer-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-language-environment 'utf-8)
+#+end_src
+** user-name
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
+  (setq user-full-name "VSteveHL")
+  (setq user-mail-address "vstevehl@163.com")
+#+end_src
+** const
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
+  (defconst *is-windows* (or (eq system-type 'windows-nt) (eq system-type 'ms-dos)))
+  (defconst *is-linux* (eq system-type 'gnu/linux))
 
-    (use-package undo-tree
-         :diminish
-         :hook (after-init . global-undo-tree-mode)
-         :init
-         (setq undo-tree-visualizer-timestamps t
-               undo-tree-enable-undo-in-region nil
-               undo-tree-auto-save-history nil))
+  (defun open-init-file ()
+    "just open my init file"
+    (interactive)
+    (find-file "~/HL-emacs.d/config.org"))
 
-    (provide 'init-edit)
-  #+end_src
+  (global-set-key (kbd "<f2>") 'open-init-file)
+#+end_src
+
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
+  (provide 'init-startup)
+#+end_src
+
 * init-elpa
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-elpa.el
     (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-			     ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+                             ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+
+    ;; (setq package-archives '(("myelpa" . "~/myelpa/")))
 
     (require 'package)
-    (package-initialize)
+    ;; (package-initialize)
 
     (unless (bound-and-true-p package--initialized)
       (package-initialize))
@@ -116,52 +72,19 @@
 
     (eval-and-compile
       (setq use-package-always-ensure t
-	    use-package-always-defer t
-	    use-package-expand-minimally t)
+            use-package-always-defer t
+            use-package-expand-minimally t)
       (require 'use-package))
 
     (use-package diminish)
     (use-package delight)
 
-
     (provide 'init-elpa)
-  #+end_src
-  
-* COMMENT init-lsp
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-lsp.el
-    (use-package lsp-mode
-      :init
-      (setq lsp-keymap-prefix "C-c l")
-      :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-             (cc-mode . lsp))
-      :commands lsp)
-    (provide 'init-lsp)
-  #+end_src
-* init-markdown
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-markdown.el
-    (use-package markdown-mode
-      :mode (("README\\.md\\'" . gfm-mode)
-             ("\\.md\\'" . markdown-mode)))
-
-    ;; (use-package toc-org
-    ;;   :hook ((org-mode markdown-mode) . toc-org-mode))
-
-    (use-package auctex)
-
-    (use-package cdlatex)
-
-    (setq-default TeX-engine 'xetex)
-    ;; (add-hook 'LaTeX-mode-hook
-    ;;           (lambda ()
-    ;;             (setq TeX-engine 'xetex)))
-
-    (provide 'init-markdown)
   #+end_src
   
 * init-org
 ** org basic setup
-
-里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][和这个]]抄的，做了一点小修改。
+里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] 和 [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][这里]] 抄的，做了一点小修改。
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
     ;; org variable
     (setq org-startup-truncated nil)
@@ -262,26 +185,90 @@
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
     (provide 'init-org)
   #+end_src
-  
-* init-program
-** magit
-#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
-  (use-package magit
-    :bind (("C-x g" . magit-status)))
+* init-utils
+** company
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package company
+    :diminish
+    :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
+    :hook (after-init . global-company-mode)
+    :bind (("C-M-i" . company-complete)
+           ("C-c i c" . company-complete)
+           ("C-c i f" . company-files)))
 #+end_src
 
-** paredit, rainbow-delimiters
-#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
- (use-package paredit
-    ;; :diminish
-    :hook ((lisp-mode racket-mode emacs-lisp-mode) . enable-paredit-mode))
+** counsel
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package counsel
+    :diminish ivy-mode counsel-mode
+    :bind (("C-s" . swiper-isearch)
+           ("C-r" . swiper-isearch-backward)
+           ("M-s g" . counsel-rg))
+    :hook ((after-init . ivy-mode)
+           (ivy-mode . counsel-mode))
+    :init
+    (setq ivy-count-format "%d/%d "
+          ivy-use-virtual-buffers t
+          ivy-initial-inputs-alist nil))
+#+end_src
 
+** undo-tree
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package undo-tree
+    :diminish
+    :hook (after-init . global-undo-tree-mode)
+    :init
+    (setq undo-tree-visualizer-timestamps t
+          undo-tree-enable-undo-in-region nil
+          undo-tree-auto-save-history nil))
+#+end_src
+
+** which-key
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package which-key
+    :diminish
+    :hook (after-init . which-key-mode))
+#+end_src
+
+** hungry-delete
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package hungry-delete
+    :bind
+    (("C-c d" . hungry-delete-forward)
+     ("C-c DEL" . hungry-delete-backward)))
+#+end_src
+
+** paredit
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package paredit
+     :diminish
+     :hook ((lisp-mode racket-mode emacs-lisp-mode) . enable-paredit-mode))
+#+end_src
+
+** rainbow-delimiters
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
+** elpa-mirror
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package elpa-mirror)
+#+end_src
+
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (provide 'init-utils)
+#+end_src
+* init-tools
+** magit
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
+  (use-package magit
+    :bind (("C-x g" . magit-status)))
+#+end_src
+
 ** projectile
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
     (use-package projectile
       :init
       (projectile-mode +1)
@@ -289,7 +276,7 @@
                   ("C-c p" . projectile-command-map)))
   #+end_src
 ** yasnippet
-#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
   (use-package yasnippet
     :bind
     (("C-c y n" . yas-new-snippet)
@@ -301,13 +288,42 @@
     (yas-global-mode 1))
 
 #+end_src
+** COMMENT rg
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package rg)
+#+end_src
+  
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
+  (provide 'init-tools)
+#+end_src
+
+* init-program
+** markdown
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+    (use-package markdown-mode
+      :mode (("README\\.md\\'" . gfm-mode)
+             ("\\.md\\'" . markdown-mode)))
+
+    ;; (use-package toc-org
+    ;;   :hook ((org-mode markdown-mode) . toc-org-mode))
+  #+end_src
+** TeX
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package auctex)
+
+  (use-package cdlatex)
+
+  (setq-default TeX-engine 'xetex)
+#+end_src
+
 ** cc-mode
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
   (setq c-default-style "bsd"
         c-basic-offset 4)
 #+end_src
 
-** Lisp
+** COMMENT Lisp
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
   (use-package slime
     :init
@@ -337,66 +353,55 @@
   (provide 'init-program)
 #+end_src
 * init-ui
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
-    (setq ring-bell-function 'ignore)
-    (global-display-line-numbers-mode)
-    (tool-bar-mode 0)
-    ;;(global-linum-mode 1)
-    (scroll-bar-mode -1)
+** UI
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (setq default-directory "~/")
+  (setq delete-by-moving-to-trash t)
+  (setq ring-bell-function 'ignore)
+  (setq inhibit-splash-screen 1)
+  ;; (setq make-backup-files nil)
+  (global-set-key (kbd "<f5>") 'revert-buffer)
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+
+  ;; (fset 'yes-or-no-p 'y-or-n-p)
+  (define-key y-or-n-p-map [return] 'act)
+  (setq use-short-answers t)
+#+end_src
+** TUI
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (setq inhibit-splash-screen 1)
+  (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
+  (setq show-paren-delay 0)
+  (show-paren-mode 1)
+  (global-display-line-numbers-mode)
+  (winner-mode 1)
+
+  (setq-default tab-width 4
+                indent-tabs-mode nil)
+#+end_src
+** GUI
+真的不知道该怎么设置……  为了让 daemon 模式下字体设置也生效，就简单粗暴地直接设定 default-frame-alist 了。由于 Linux 目前上用的是 emacs-nox，所以只让这个设定在 windows 上生效。
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (use-package emacs
+    :if *is-windows*
+    :config
     (setq-default cursor-type 'bar)
-
-    (setq show-paren-delay 0)
-    (show-paren-mode 1)
-
-    (winner-mode 1)
-
-    (setq inhibit-splash-screen 1)
-
-    ;; (fset 'yes-or-no-p 'y-or-n-p)
-    (define-key y-or-n-p-map [return] 'act)
-    (setq use-short-answers t)
-
-    (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
-
-    (setq default-frame-alist '((font . "JetBrains Mono-16")))
-    (set-face-attribute 'default nil :font "JetBrains Mono-16")
-    ;;(set-fontset-font "fontset-default" 'han "微软雅黑")
+    (scroll-bar-mode -1)
+    (tool-bar-mode 0)
     (set-fontset-font "fontset-default" 'han "霞鹜文楷")
+    (setq default-frame-alist '((width . 90)
+                                (height . 28)
+                                (font . "JetBrains Mono-16"))))
+  (use-package emacs
+    :if *is-linux*
+    :config
+    (menu-bar-mode -1))
+#+end_src
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (provide 'init-ui)
+#+end_src
 
-    ;;(add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
-    (add-to-list 'default-frame-alist '(width . 90))
-    (add-to-list 'default-frame-alist '(height . 28))
-
-    ;; 这是一行中文
-    ;;(use-package cnfonts
-    ;;  :hook (after-init . cnfonts-mode))
-
-    (setq-default c-basic-offset   4
-                  tab-width        4
-                  indent-tabs-mode nil)
-
-    (provide 'init-ui)
-
-  #+end_src
-
-* init-utils
-  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
-    (use-package rg)
-
-    (use-package hungry-delete
-      :bind
-      (("C-c d" . hungry-delete-forward)
-       ("C-c DEL" . hungry-delete-backward)))
-
-    (use-package which-key
-      :diminish
-      :hook (after-init . which-key-mode))
-
-    (use-package elpa-mirror)
-
-    (provide 'init-utils) 
-  #+end_src
-  
 * runemacs.bat
 最开始的方案是在bat文件里指定HOME目录
   #+begin_src
