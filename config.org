@@ -85,7 +85,10 @@
 * init-org
 ** org basic setup
 里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] 和 [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][这里]] 抄的，做了一点小修改。
+org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/whats_the_difference_between_org_mode_link_types/][这里]]
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    (require 'org)
+
     ;; org variable
     (setq org-startup-truncated nil)
     (setq org-log-done 'time)
@@ -96,8 +99,19 @@
     (setq org-image-actual-width nil)
     (setq calendar-date-style 'iso)
     (setq diary-show-holidays-flag nil)
+    (setq org-startup-folded 'content)
+    (setq org-clock-mode-line-total 'current)
 
-    (setq org-todo-keyword-faces '(("CANCELED" . "gray")))
+    (setq org-link-parameters (delq (assoc "file+sys" org-link-parameters) org-link-parameters))
+    (setq org-link-parameters (delq (assoc "file+emacs" org-link-parameters) org-link-parameters))
+
+    ;; (setq org-todo-keyword-faces '(("CANCELED" . "gray")))
+
+    ;; (setq org-clock-persist 'history)
+    ;; (org-clock-persistence-insinuate)
+
+    (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
+
 
     ;; key bind
     ;; (global-set-key (kbd "C-c l") #'org-store-link)
@@ -125,7 +139,8 @@
     ;; org agenda
     (setq org-agenda-files '("~/GTD/task.org"
                              "~/GTD/schedule.org"
-                             "~/GTD/habit.org"))
+                             "~/GTD/habit.org"
+                             "~/GTD/future.org"))
 
     ;; org-habit
     (require 'org-habit)
@@ -149,7 +164,7 @@
     (use-package org-roam
       :ensure t
       :custom
-      (org-roam-directory (file-truename "~/roam/"))
+      (org-roam-directory (file-truename "~/roam-note/"))
       :bind (("C-c n l" . org-roam-buffer-toggle)
              ("C-c n f" . org-roam-node-find)
              ("C-c n g" . org-roam-graph)
@@ -256,15 +271,48 @@
   (use-package elpa-mirror)
 #+end_src
 
+** keyfreq
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package keyfreq
+    :hook ((after-init . keyfreq-mode))
+    :config
+    (keyfreq-autosave-mode 1))
+#+end_src
+
+** expand-region
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package expand-region
+    :bind ("C-=" . er/expand-region))
+#+end_src
+
+** avy
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package avy
+    :bind (("C-:" . avy-goto-char)
+           ("M-g f" . avy-goto-line)
+           ("M-g w" . avy-goto-word-1)
+           ("M-g e" . avy-goto-word-0)
+           ("C-'" . avy-goto-char-2)
+           :map org-mode-map
+           ("C-'" . avy-goto-char-2)))
+#+end_src
+
+** iedit
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+  (use-package iedit
+    :bind ("C-;" . iedit-mode))
+#+end_src
 ** provide
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
   (provide 'init-utils)
 #+end_src
 * init-tools
-** magit
+** git
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
   (use-package magit
     :bind (("C-x g" . magit-status)))
+
+  (use-package git-modes)
 #+end_src
 
 ** projectile
@@ -287,6 +335,7 @@
     :config
     (yas-global-mode 1))
 
+  (use-package yasnippet-snippets)
 #+end_src
 ** COMMENT rg
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
@@ -335,7 +384,13 @@
   ;;   :hook (racket-mode . racket-xp-mode))
 #+end_src
 
-** COMMENT python
+** python
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (setq python-shell-interpreter "ipython"
+        python-shell-interpreter-args "-i --simple-prompt --InteractiveShell.display_page=True")
+#+end_src
+
+** COMMENT elpy
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
   (setq python-shell-interpreter "ipython"
         python-shell-interpreter-args "-i --simple-prompt")
@@ -348,12 +403,22 @@
                             (add-hook 'before-save-hook
                                       'elpy-yapf-fix-code nil t)))
 #+end_src
+** COMMENT web
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package web-mode
+    :mode ("\\.html\\'" . web-mode))
+
+  (use-package js2-mode
+    :mode ("\\.js\\'" . js2-mode))
+#+end_src
+
 ** provide
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
   (provide 'init-program)
 #+end_src
 * init-ui
 ** UI
+[[https://www.bilibili.com/read/cv13719366][自动保存]]
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (setq default-directory "~/")
   (setq delete-by-moving-to-trash t)
@@ -362,19 +427,34 @@
   ;; (setq make-backup-files nil)
   (global-set-key (kbd "<f5>") 'revert-buffer)
   (global-set-key (kbd "C-x C-b") 'ibuffer)
+  (global-set-key (kbd "C-.") 'imenu)
 
   ;; (fset 'yes-or-no-p 'y-or-n-p)
   (define-key y-or-n-p-map [return] 'act)
   (setq use-short-answers t)
+
+  (add-function :after after-focus-change-function
+                (lambda () (save-some-buffers t)))
+
+  ;; (save-place-mode 1)
+
+  (use-package delsel
+    :ensure nil
+    :hook (after-init . delete-selection-mode))
 #+end_src
 ** TUI
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (setq inhibit-splash-screen 1)
   (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
-  (setq show-paren-delay 0)
+
+  (setq show-paren-delay 0
+        show-paren-when-point-inside-paren t
+        show-paren-when-point-in-periphery t)
   (show-paren-mode 1)
+
   (global-display-line-numbers-mode)
   (winner-mode 1)
+  (column-number-mode 1)
 
   (setq-default tab-width 4
                 indent-tabs-mode nil)
@@ -383,6 +463,7 @@
 真的不知道该怎么设置……  为了让 daemon 模式下字体设置也生效，就简单粗暴地直接设定 default-frame-alist 了。由于 Linux 目前上用的是 emacs-nox，所以只让这个设定在 windows 上生效。
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (use-package emacs
+    :ensure nil
     :if *is-windows*
     :config
     (setq-default cursor-type 'bar)
@@ -393,17 +474,34 @@
                                 (height . 28)
                                 (font . "JetBrains Mono-16"))))
   (use-package emacs
+    :ensure nil
     :if *is-linux*
     :config
     (menu-bar-mode -1))
+#+end_src
+** COMMENT theme
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (use-package doom-themes
+    :defer nil
+    :config (load-theme 'doom-dracula t))
 #+end_src
 ** provide
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (provide 'init-ui)
 #+end_src
-
+* COMMENT init-evil
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (use-package evil
+    :hook (after-init . evil-mode)
+    :config
+    (setq evil-default-state 'emacs
+          evil-emacs-state-cursor 'bar
+          evil-undo-system 'undo-tree))
+#+end_src
 * runemacs.bat
 最开始的方案是在bat文件里指定HOME目录
+%~dp0: %0代表脚本自身，~dp表示变量扩充，d是扩充到分区，p是扩充到路径。%~dp0合起来就代表当前目录的路径。
+set HOME=%~dp0
   #+begin_src
 set HOME=C:\Users\<username>
 "C:\portable\emacs-27.2-x86_64\bin\runemacs.exe"
@@ -427,11 +525,11 @@ run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
 #+begin_src text :tangle ~/.emacs.d/snippets/org-mode/init-tangle
   # -*- mode: snippet -*-
   # name: init-tangle
-  # key: init
+  # key: qw
   # --
 
-    ,#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/$1
-    $0
-    ,#+end_src
+  ,#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/$1
+  $0
+  ,#+end_src
   #+end_src
 
