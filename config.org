@@ -47,6 +47,11 @@
 
   (global-set-key (kbd "<f2>") 'open-init-file)
 #+end_src
+** custom file
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
+  (setq custom-file "~/.emacs.d/custom.el")
+  (if (file-exists-p custom-file) (load custom-file))
+#+end_src
 
 ** provide
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-startup.el
@@ -88,6 +93,7 @@
 org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/whats_the_difference_between_org_mode_link_types/][这里]]
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
     (require 'org)
+    (require 'org-id)
 
     ;; org variable
     (setq org-startup-truncated nil)
@@ -101,6 +107,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     (setq diary-show-holidays-flag nil)
     (setq org-startup-folded 'content)
     (setq org-clock-mode-line-total 'current)
+    (setq org-id-link-to-org-use-id t)
 
     (setq org-link-parameters (delq (assoc "file+sys" org-link-parameters) org-link-parameters))
     (setq org-link-parameters (delq (assoc "file+emacs" org-link-parameters) org-link-parameters))
@@ -114,7 +121,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 
 
     ;; key bind
-    ;; (global-set-key (kbd "C-c l") #'org-store-link)
+    (global-set-key (kbd "C-c l") #'org-store-link)
     (global-set-key (kbd "C-c a") #'org-agenda)
     (global-set-key (kbd "C-c c") #'org-capture)
     (global-set-key (kbd "C-,") #'org-cycle-agenda-files)
@@ -163,8 +170,8 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
     (use-package org-roam
       :ensure t
-      :custom
-      (org-roam-directory (file-truename "~/roam-note/"))
+      :init
+      (setq org-roam-directory (file-truename "~/roam-note/"))
       :bind (("C-c n l" . org-roam-buffer-toggle)
              ("C-c n f" . org-roam-node-find)
              ("C-c n g" . org-roam-graph)
@@ -372,16 +379,12 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
         c-basic-offset 4)
 #+end_src
 
-** COMMENT Lisp
+** Lisp
+*** sly
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
-  (use-package slime
+  (use-package sly
     :init
-    (setq inferior-lisp-program "sbcl")
-    :config
-    (slime-setup '(slime-fancy slime-quicklisp slime-asdf)))
-
-  ;; (use-package racket-mode
-  ;;   :hook (racket-mode . racket-xp-mode))
+    (setq inferior-lisp-program "~/.roswell/impls/x86-64/windows/sbcl-bin/2.2.3/bin/sbcl.exe"))
 #+end_src
 
 ** python
@@ -483,8 +486,17 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (use-package doom-themes
     :defer nil
-    :config (load-theme 'doom-dracula t))
+    :config (load-theme 'doom-opera-light t))
 #+end_src
+** COMMENT doom-modeline
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+  (use-package doom-modeline
+    :hook (after-init . doom-modeline-mode)
+    :config
+    (setq doom-modeline-icon nil)
+    (setq doom-modeline-bar-width -1))
+#+end_src
+
 ** provide
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (provide 'init-ui)
