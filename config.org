@@ -19,6 +19,11 @@
       (require 'init-tools)
       (require 'init-program)
       (require 'init-ui)
+
+      (defun my-anime (year month day name)
+        (let* ((raw (org-cyclic 7 year month day)))
+          (if raw
+              (format "%s 第%d集" name (1+ (string-to-number (cdr raw)))))))
   #+end_src
 
 * init-startup
@@ -169,6 +174,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 ** org-roam
   #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
     (use-package org-roam
+      :if *is-windows*
       :ensure t
       :init
       (setq org-roam-directory (file-truename "~/roam-note/"))
@@ -264,7 +270,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
   (use-package paredit
      :diminish
-     :hook ((lisp-mode racket-mode emacs-lisp-mode) . enable-paredit-mode))
+     :hook ((lisp-mode racket-mode emacs-lisp-mode sly-mrepl-mode slime-repl-mode) . enable-paredit-mode))
 #+end_src
 
 ** rainbow-delimiters
@@ -333,6 +339,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 ** yasnippet
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-tools.el
   (use-package yasnippet
+    :defer nil
     :bind
     (("C-c y n" . yas-new-snippet)
      ("C-c y s" . yas-insert-snippet)
@@ -366,9 +373,11 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   #+end_src
 ** TeX
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
-  (use-package auctex)
+  (use-package auctex
+    :if *is-windows*)
 
-  (use-package cdlatex)
+  (use-package cdlatex
+    :if *is-windows*)
 
   (setq-default TeX-engine 'xetex)
 #+end_src
@@ -385,6 +394,18 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   (use-package sly
     :init
     (setq inferior-lisp-program "~/.roswell/impls/x86-64/windows/sbcl-bin/2.2.3/bin/sbcl.exe"))
+#+end_src
+*** COMMENT slime
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package slime
+    :init
+    (setq inferior-lisp-program "~/.roswell/impls/x86-64/windows/sbcl-bin/2.2.3/bin/sbcl.exe"
+          slime-complete-symbol-function 'slime-fuzzy-complete-symbol
+          slime-description-autofocus t
+          slime-contribs '(slime-fancy slime-repl))
+    (add-hook 'slime-repl-mode-hook #'(lambda () (define-key slime-repl-mode-map [(backspace)] #'paredit-backward-delete)
+  )))
+
 #+end_src
 
 ** python
@@ -427,6 +448,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   (setq delete-by-moving-to-trash t)
   (setq ring-bell-function 'ignore)
   (setq inhibit-splash-screen 1)
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
   ;; (setq make-backup-files nil)
   (global-set-key (kbd "<f5>") 'revert-buffer)
   (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -501,16 +523,43 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (provide 'init-ui)
 #+end_src
-* COMMENT init-evil
+* init-evil
 #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
   (use-package evil
-    :hook (after-init . evil-mode)
-    :config
-    (setq evil-default-state 'emacs
+    :hook ((prog-mode text-mode)  . evil-local-mode)
+    :init
+    (setq evil-undo-system 'undo-tree
           evil-emacs-state-cursor 'bar
-          evil-undo-system 'undo-tree))
+          evil-disable-insert-state-bindings t)
+    (add-hook 'evil-normal-state-entry-hook (lambda () (save-some-buffers t)))
+    :config
+    (evil-declare-key 'normal org-mode-map
+      (kbd "TAB") 'org-cycle))
+
+  (use-package evil-escape
+    :hook (after-init . evil-escape-mode)
+    ;; :after (evil)
+    :config
+    (setq-default evil-escape-delay 0.3)
+    (setq-default evil-escape-key-sequence "jk")
+    (setq evil-escape-excluded-major-modes '(help-mode)))
+
+  (use-package general)
+
+  (general-define-key 
+   :prefix "SPC"
+   :states '(normal visual)
+   "s" 'avy-goto-char-2
+   "t" 'org-babel-tangle)
+
+  (general-define-key 
+   :prefix ";"
+   :states '(normal visual)
+   ";" 'avy-goto-char-2)
+  ;; (use-package evil-surround)
 #+end_src
 * runemacs.bat
+** 方案1
 最开始的方案是在bat文件里指定HOME目录
 %~dp0: %0代表脚本自身，~dp表示变量扩充，d是扩充到分区，p是扩充到路径。%~dp0合起来就代表当前目录的路径。
 set HOME=%~dp0
@@ -518,7 +567,7 @@ set HOME=%~dp0
 set HOME=C:\Users\<username>
 "C:\portable\emacs-27.2-x86_64\bin\runemacs.exe"
   #+end_src
-
+** 方案2
 后来切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
 (此时也切换到了gccemacs，windows版本在这里下载 https://github.com/kiennq/emacs-build)
 #+begin_src
@@ -531,6 +580,14 @@ run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
 #+end_src
 
 在守护进程运行之后，将emacsclientw.exe右键发送到桌面快捷方式，之后在 属性-目标 中加上 -c 即可
+** 方案3
+https://emacstalk.github.io/post/020/
+用这样一组参数
+emacsclient -a "" -c -n "$@"
+不过直接用在windows上好像有问题，把最后的 "$@" 去掉，然后创建一个快捷方式即可正常使用
+
+这个 alias 在终端使用
+alias e="emacsclient -c -a \"\""
 
 * COMMENT yasnippet
 
@@ -545,3 +602,5 @@ run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
   ,#+end_src
   #+end_src
 
+* playground
+"here"
