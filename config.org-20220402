@@ -1,0 +1,432 @@
+# -*- coding: utf-8 -*-
+#+STARTUP: overview
+#+PROPERTY: header-args :mkdirp yes
+  
+* COMMENT early-init.el
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/early-init.el
+    (push '(menu-bar-lines . 0) default-frame-alist)
+    (push '(tool-bar-lines . 0) default-frame-alist)
+    (push '(vertical-scroll-bars) default-frame-alist)
+  #+end_src
+* init.el
+  
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (setq user-full-name "VSteveHL")
+    (setq user-mail-address "vstevehl@163.com")
+
+    (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
+    (setq default-directory "~/")
+    (setq delete-by-moving-to-trash t)
+
+    (prefer-coding-system 'utf-8)
+    (set-language-environment "UTF-8")
+    (set-keyboard-coding-system 'utf-8)
+
+    ;; (setq make-backup-files nil)
+
+    (defun open-init-file ()
+      (interactive)
+      (find-file "~/HL-emacs.d/config.org"))
+
+    (global-set-key (kbd "<f2>") 'open-init-file)
+    (global-set-key (kbd "<f5>") 'revert-buffer)
+    (global-set-key (kbd "C-x C-b") 'ibuffer)
+    ;;(fido-mode t)
+
+    (require 'init-elpa)
+
+    (require 'init-completion)
+    (require 'init-edit)
+    ;; (require 'init-lsp)
+    (require 'init-markdown)
+    (require 'init-org)
+    (require 'init-program)
+    (require 'init-ui)
+    (require 'init-utils)
+
+
+  #+end_src
+  
+* init-completion
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-completion.el
+    (use-package company
+      :diminish
+      :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
+      :hook (after-init . global-company-mode)
+      :bind (("C-M-i" . company-complete)
+             ("C-c i c" . company-complete)
+             ("C-c i f" . company-files)))
+
+    ;; (global-set-key (kbd "C-c c f") 'company-complete)
+
+    ;; (use-package company-fuzzy
+    ;;   :hook (after-init . global-company-fuzzy-mode)
+    ;;   :init
+    ;;   (setq company-fuzzy-sorting-backend 'alphabetic
+    ;;         company-fuzzy-prefix-on-top nil
+    ;;         company-fuzzy-history-backends '(company-yasnippet)
+    ;;         company-fuzzy-trigger-symbols '("." "->" "<" "\"" "'" "@")))
+    ;; (global-company-fuzzy-mode 1)
+
+    (use-package counsel
+      :diminish ivy-mode counsel-mode
+      :bind (("C-s" . swiper-isearch)
+             ("C-r" . swiper-isearch-backward)
+             ("M-s g" . counsel-rg))
+      :hook ((after-init . ivy-mode)
+             (ivy-mode . counsel-mode))
+      :init
+      (setq ivy-count-format "%d/%d "
+            ivy-use-virtual-buffers t
+            ivy-initial-inputs-alist nil))
+
+    (provide 'init-completion)
+
+  #+end_src
+
+* init-edit
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-edit.el
+    ;; (use-package imenu
+    ;; 	 :bind (("C-." . imenu)))
+
+    (use-package undo-tree
+         :diminish
+         :hook (after-init . global-undo-tree-mode)
+         :init
+         (setq undo-tree-visualizer-timestamps t
+               undo-tree-enable-undo-in-region nil
+               undo-tree-auto-save-history nil))
+
+    (provide 'init-edit)
+  #+end_src
+* init-elpa
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-elpa.el
+    (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+			     ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+
+    (require 'package)
+    (package-initialize)
+
+    (unless (bound-and-true-p package--initialized)
+      (package-initialize))
+
+    (unless (package-installed-p 'use-package)
+      (package-refresh-contents)
+      (package-install 'use-package))
+
+    (eval-and-compile
+      (setq use-package-always-ensure t
+	    use-package-always-defer t
+	    use-package-expand-minimally t)
+      (require 'use-package))
+
+    (use-package diminish)
+    (use-package delight)
+
+
+    (provide 'init-elpa)
+  #+end_src
+  
+* COMMENT init-lsp
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-lsp.el
+    (use-package lsp-mode
+      :init
+      (setq lsp-keymap-prefix "C-c l")
+      :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+             (cc-mode . lsp))
+      :commands lsp)
+    (provide 'init-lsp)
+  #+end_src
+* init-markdown
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-markdown.el
+    (use-package markdown-mode
+      :mode (("README\\.md\\'" . gfm-mode)
+             ("\\.md\\'" . markdown-mode)))
+
+    ;; (use-package toc-org
+    ;;   :hook ((org-mode markdown-mode) . toc-org-mode))
+
+    (use-package auctex)
+
+    (use-package cdlatex)
+
+    (setq-default TeX-engine 'xetex)
+    ;; (add-hook 'LaTeX-mode-hook
+    ;;           (lambda ()
+    ;;             (setq TeX-engine 'xetex)))
+
+    (provide 'init-markdown)
+  #+end_src
+  
+* init-org
+** org basic setup
+
+里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][和这个]]抄的，做了一点小修改。
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    ;; org variable
+    (setq org-startup-truncated nil)
+    (setq org-log-done 'time)
+    (setq org-log-into-drawer t)
+    ;; (setq org-agenda-include-diary t)
+    (setq system-time-locale "C")
+    (setq org-startup-indented t)
+    (setq org-image-actual-width nil)
+    (setq calendar-date-style 'iso)
+    (setq diary-show-holidays-flag nil)
+
+    (setq org-todo-keyword-faces '(("CANCELED" . "gray")))
+
+    ;; key bind
+    ;; (global-set-key (kbd "C-c l") #'org-store-link)
+    (global-set-key (kbd "C-c a") #'org-agenda)
+    (global-set-key (kbd "C-c c") #'org-capture)
+    (global-set-key (kbd "C-,") #'org-cycle-agenda-files)
+  #+end_src
+** org export
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+  ;; org export
+  (require 'org-tempo)
+  (setq org-export-backends '(latex md html ascii org))
+
+  (defun org-mymd-example-block (example-block _content info)
+    "Transcode element EXAMPLE-BLOCK as ```lang ...'''."
+    (format "```%s\n%s```"
+            (org-element-property :language example-block)
+            (org-remove-indentation
+             (org-export-format-code-default example-block info))))
+
+  (advice-add 'org-md-example-block :override #'org-mymd-example-block)
+#+end_src
+** org agenda
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    ;; org agenda
+    (setq org-agenda-files '("~/GTD/task.org"
+                             "~/GTD/schedule.org"
+                             "~/GTD/habit.org"))
+
+    ;; org-habit
+    (require 'org-habit)
+    (setq org-habit-preceding-days 10
+          org-habit-following-days 4)
+  #+end_src
+  
+** org capture
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    ;; org capture
+    (setq org-default-notes-file "~/GTD/inbox.org")
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/gtd/task.org" "Tasks")
+             "* TODO %?\n%i\n%a")
+            ("i" "inbox" entry (file+headline "~/gtd/task.org" "inbox")
+             "* %?")))
+  #+end_src
+  
+** org-roam
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    (use-package org-roam
+      :ensure t
+      :custom
+      (org-roam-directory (file-truename "~/roam/"))
+      :bind (("C-c n l" . org-roam-buffer-toggle)
+             ("C-c n f" . org-roam-node-find)
+             ("C-c n g" . org-roam-graph)
+             ("C-c n i" . org-roam-node-insert)
+             ("C-c n c" . org-roam-capture)
+             ;; Dailies
+             ("C-c n j" . org-roam-dailies-capture-today))
+      :config
+      ;; If you're using a vertical completion framework, you might want a more informative completion interface
+      (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+      (org-roam-db-autosync-mode)
+      ;; If using org-roam-protocol
+      (require 'org-roam-protocol))
+  #+end_src
+  
+** COMMENT org-crypt
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    ;; epa
+    (require 'epa-file)
+    (epa-file-enable)
+    (setq epa-file-encrypt-to nil
+          epa-file-cache-passphrase-for-symmetric-encryption t)
+
+    ;; org-crypt
+    (require 'org-crypt)
+    (org-crypt-use-before-save-magic)
+    (setq auto-save-default nil)
+    (setq org-tags-exclude-from-inheritance '("crypt"))
+    (setq org-crypt-key nil)
+  #+end_src
+  
+** provide
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-org.el
+    (provide 'init-org)
+  #+end_src
+  
+* init-program
+** magit
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package magit
+    :bind (("C-x g" . magit-status)))
+#+end_src
+
+** paredit, rainbow-delimiters
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+ (use-package paredit
+    ;; :diminish
+    :hook ((lisp-mode racket-mode emacs-lisp-mode) . enable-paredit-mode))
+
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+** projectile
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+    (use-package projectile
+      :init
+      (projectile-mode +1)
+      :bind (:map projectile-mode-map
+                  ("C-c p" . projectile-command-map)))
+  #+end_src
+** yasnippet
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package yasnippet
+    :bind
+    (("C-c y n" . yas-new-snippet)
+     ("C-c y s" . yas-insert-snippet)
+     ("C-c y v" . yas-visit-snippet-file))
+    :init
+    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+    :config
+    (yas-global-mode 1))
+
+#+end_src
+** cc-mode
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (setq c-default-style "bsd"
+        c-basic-offset 4)
+#+end_src
+
+** Lisp
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (use-package slime
+    :init
+    (setq inferior-lisp-program "sbcl")
+    :config
+    (slime-setup '(slime-fancy slime-quicklisp slime-asdf)))
+
+  ;; (use-package racket-mode
+  ;;   :hook (racket-mode . racket-xp-mode))
+#+end_src
+
+** COMMENT python
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (setq python-shell-interpreter "ipython"
+        python-shell-interpreter-args "-i --simple-prompt")
+
+  (use-package elpy
+    :init
+    (elpy-enable))
+
+  (add-hook 'elpy-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'elpy-yapf-fix-code nil t)))
+#+end_src
+** provide
+#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-program.el
+  (provide 'init-program)
+#+end_src
+* init-ui
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-ui.el
+    (setq ring-bell-function 'ignore)
+    (global-display-line-numbers-mode)
+    (tool-bar-mode 0)
+    ;;(global-linum-mode 1)
+    (scroll-bar-mode -1)
+    (setq-default cursor-type 'bar)
+
+    (setq show-paren-delay 0)
+    (show-paren-mode 1)
+
+    (winner-mode 1)
+
+    (setq inhibit-splash-screen 1)
+
+    ;; (fset 'yes-or-no-p 'y-or-n-p)
+    (define-key y-or-n-p-map [return] 'act)
+    (setq use-short-answers t)
+
+    (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
+
+    (setq default-frame-alist '((font . "JetBrains Mono-16")))
+    (set-face-attribute 'default nil :font "JetBrains Mono-16")
+    ;;(set-fontset-font "fontset-default" 'han "微软雅黑")
+    (set-fontset-font "fontset-default" 'han "霞鹜文楷")
+
+    ;;(add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
+    (add-to-list 'default-frame-alist '(width . 90))
+    (add-to-list 'default-frame-alist '(height . 28))
+
+    ;; 这是一行中文
+    ;;(use-package cnfonts
+    ;;  :hook (after-init . cnfonts-mode))
+
+    (setq-default c-basic-offset   4
+                  tab-width        4
+                  indent-tabs-mode nil)
+
+    (provide 'init-ui)
+
+  #+end_src
+
+* init-utils
+  #+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/init-utils.el
+    (use-package rg)
+
+    (use-package hungry-delete
+      :bind
+      (("C-c d" . hungry-delete-forward)
+       ("C-c DEL" . hungry-delete-backward)))
+
+    (use-package which-key
+      :diminish
+      :hook (after-init . which-key-mode))
+
+    (use-package elpa-mirror)
+
+    (provide 'init-utils) 
+  #+end_src
+  
+* runemacs.bat
+最开始的方案是在bat文件里指定HOME目录
+  #+begin_src
+set HOME=C:\Users\<username>
+"C:\portable\emacs-27.2-x86_64\bin\runemacs.exe"
+  #+end_src
+
+后来切换到守护进程(daemon)方式来运行emacs，于是设置了HOME变量并整了个ahk脚本
+(此时也切换到了gccemacs，windows版本在这里下载 https://github.com/kiennq/emacs-build)
+#+begin_src
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+
+run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
+#+end_src
+
+在守护进程运行之后，将emacsclientw.exe右键发送到桌面快捷方式，之后在 属性-目标 中加上 -c 即可
+
+* COMMENT yasnippet
+
+#+begin_src text :tangle ~/.emacs.d/snippets/org-mode/init-tangle
+  # -*- mode: snippet -*-
+  # name: init-tangle
+  # key: init
+  # --
+
+    ,#+begin_src emacs-lisp :tangle ~/.emacs.d/lisp/$1
+    $0
+    ,#+end_src
+  #+end_src
+
