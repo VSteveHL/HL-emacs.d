@@ -2,22 +2,12 @@
 #+STARTUP: overview
 #+PROPERTY: header-args :tangle ~/.emacs.d/init.el :mkdirp yes
   
-* COMMENT init.el
-    #+begin_src emacs-lisp
-      (add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp/"))
-
-      (require 'init-startup)
-      (require 'init-elpa)
-      (require 'init-org)
-      (require 'init-utils)
-      (require 'init-tools)
-      (require 'init-program)
-      (require 'init-ui)
-      (require 'color-rg)
-
-  #+end_src
-
 * init-startup
+** lexical-binding
+#+begin_src emacs-lisp
+  ;; -*- lexical-binding: t; -*-
+#+end_src
+
 ** coding-system
 #+begin_src emacs-lisp
   (prefer-coding-system 'utf-8)
@@ -45,24 +35,23 @@
 
   (global-set-key (kbd "<f2>") 'open-init-file)
 #+end_src
+
 ** custom file
 #+begin_src emacs-lisp
-  (setq custom-file "~/.emacs.d/custom.el")
-  (if (file-exists-p custom-file) (load custom-file))
-#+end_src
-
-** COMMENT provide
-#+begin_src emacs-lisp
-  (provide 'init-startup)
+  (setq *custom-file* "~/.emacs.d/custom.el")
+  (if (file-exists-p *custom-file*) (load *custom-file*))
 #+end_src
 
 * init-elpa
+- [[https://github.com/seagle0128/.emacs.d][centaur Emacs]]
+- https://github.com/jwiegley/use-package
   #+begin_src emacs-lisp
     (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                              ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 
-    ;; (setq package-archives '(("gnu"   . "http://elpa.zilongshanren.com/gnu/")
-    ;;                       ("melpa" . "http://elpa.zilongshanren.com/melpa/")))
+    ;; emacs-china 的源，备用
+    ;;(setq package-archives '(("gnu"   . "http://1.15.88.122/gnu/")
+    ;;                           ("melpa" . "http://1.15.88.122/melpa/")))
 
     ;; mysy2 版本的 gpg 路径出问题了，先把这个关了
     ;;(setq package-check-signature nil)
@@ -72,6 +61,7 @@
     (require 'package)
     ;; (package-initialize)
 
+    ;; 下面这一段是从 Centaur Emacs 抄的，用于初始化 use-package
     (unless (bound-and-true-p package--initialized)
       (package-initialize))
 
@@ -87,43 +77,18 @@
 
     (use-package diminish)
     (use-package delight)
-
   #+end_src
   
 * init-org
 ** org basic setup
-里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] 和 [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][这里]] 抄的，做了一点小修改。
 org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/whats_the_difference_between_org_mode_link_types/][这里]]
   #+begin_src emacs-lisp
     (require 'org)
-    (require 'org-id)
+    (setq system-time-locale "C") ;; 调整 org 时间戳的格式
+    (setq org-archive-default-command #'org-toggle-archive-tag) ;; 归档默认原地归档
 
-    ;; org variable
-    (setq org-startup-truncated nil)
-    (setq org-log-done 'time)
-    (setq org-log-into-drawer t)
-    ;; (setq org-agenda-include-diary t)
-    (setq system-time-locale "C")
-    (setq org-startup-indented t)
-    (setq org-image-actual-width nil)
-    (setq calendar-date-style 'iso)
-    (setq diary-show-holidays-flag nil)
-    (setq org-startup-folded 'content)
-    (setq org-clock-mode-line-total 'current)
-    (setq org-id-link-to-org-use-id t)
-
-    (setq org-link-parameters (delq (assoc "file+sys" org-link-parameters) org-link-parameters))
-    (setq org-link-parameters (delq (assoc "file+emacs" org-link-parameters) org-link-parameters))
-
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
-    (setq org-archive-default-command #'org-toggle-archive-tag)
-    ;; (setq org-todo-keyword-faces '(("CANCELED" . "gray")))
-
-    ;; (setq org-clock-persist 'history)
-    ;; (org-clock-persistence-insinuate)
-
+    ;; txt 文件打开默认使用 orgmode
     (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
-
 
     ;; key bind
     (global-set-key (kbd "C-c l") #'org-store-link)
@@ -132,11 +97,27 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     (global-set-key (kbd "C-,") #'org-cycle-agenda-files)
     (define-key org-mode-map (kbd "C-c C-o") #'org-open-at-point-global)
   #+end_src
-** org export
+
+** org 视觉方面的一些调整
 #+begin_src emacs-lisp
-  ;; org export
-  (require 'org-tempo)
+  (setq org-startup-truncated nil) ;; 开启自动换行
+  (setq org-startup-indented t) ;; 多级标题自动缩进
+  (setq org-image-actual-width nil)  ;; 调整 org 图片显示
+  (setq org-startup-folded 'content) ;; 打开 org 文件时默认的显示等级
+  ;; 调整嵌入的 latex 图片的大小
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+  (setq org-clock-mode-line-total 'current) ;; org clock 在 modeline 上的显示
+#+end_src
+
+** org export
+里面修改了markdown代码块导出的函数是从 [[https://stackoverflow.com/questions/15717103/preferred-method-of-overriding-an-emacs-lisp-function][这里]] 和 [[https://emacs.stackexchange.com/questions/42471/how-to-export-markdown-from-org-mode-with-syntax][这里]] 抄的，做了一点小修改。
+#+begin_src emacs-lisp
+  ;; org export 要用的后端
   (setq org-export-backends '(latex md html ascii org))
+
+  ;; 开启模版功能，自己添加了一个text种类的src，主要是为了方便tangle
+  (require 'org-tempo)
+  (push '("t" . "src text") org-structure-template-alist)
 
   (defun org-mymd-example-block (example-block _content info)
     "Transcode element EXAMPLE-BLOCK as ```lang ...'''."
@@ -147,18 +128,38 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 
   (advice-add 'org-md-example-block :override #'org-mymd-example-block)
 #+end_src
-** org agenda
+
+** org todo, log
+#+begin_src emacs-lisp
+  (setq org-log-done 'time) ;; 变为 DONE时自动添加时间戳
+  ;; (setq org-todo-keyword-faces '(("CANCELED" . "gray")))
+  (setq org-log-into-drawer t) ;; log 默认收进抽屉
+#+end_src
+
+** org agenda (and diary)
   #+begin_src emacs-lisp
-    ;; org agenda
-    (setq org-agenda-files '("~/GTD/task.org"
-                             "~/GTD/schedule.org"))
+    ;; agenda variable
+    (setq org-agenda-files '("~/GTD/bookmarks.org"))
+    ;; (setq org-agenda-include-diary t)
+    (setq calendar-date-style 'iso)
+    (setq diary-show-holidays-flag nil) ;; 禁止 diary 显示节日
 
     ;; org-habit
     (require 'org-habit)
     (setq org-habit-preceding-days 10
           org-habit-following-days 4)
   #+end_src
-  
+
+** org hyperlink, id
+#+begin_src emacs-lisp
+  (require 'org-id) ;; 为了下面的 org-id-link-to-org-use-id
+  (setq org-id-link-to-org-use-id t) ;; org 生成链接默认用 uuid
+
+  ;; 删除俩不用的 link 种类，防止 ivy 读到
+  (setq org-link-parameters (delq (assoc "file+sys" org-link-parameters) org-link-parameters))
+  (setq org-link-parameters (delq (assoc "file+emacs" org-link-parameters) org-link-parameters))
+#+end_src
+
 ** org capture
   #+begin_src emacs-lisp
     ;; org capture
@@ -171,6 +172,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   #+end_src
   
 ** org-roam
+直接从readme里抄的。[[https://github.com/org-roam/org-roam#configuration][链接]]
   #+begin_src emacs-lisp
     (use-package org-roam
       :if *is-windows*
@@ -195,25 +197,22 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 ** COMMENT org-crypt
   #+begin_src emacs-lisp
     ;; epa
-    (require 'epa-file)
-    (epa-file-enable)
-    (setq epa-file-encrypt-to nil
-          epa-file-cache-passphrase-for-symmetric-encryption t)
+    ;;(require 'epa-file)
+    ;;(epa-file-enable)
+    ;;(setq epa-file-encrypt-to nil
+    ;;      epa-file-cache-passphrase-for-symmetric-encryption t)
 
     ;; org-crypt
     (require 'org-crypt)
     (org-crypt-use-before-save-magic)
-    (setq auto-save-default nil)
     (setq org-tags-exclude-from-inheritance '("crypt"))
     (setq org-crypt-key nil)
+    (setq auto-save-default nil)
   #+end_src
   
-** COMMENT provide
-  #+begin_src emacs-lisp
-    (provide 'init-org)
-  #+end_src
 * init-utils
 ** company
+https://github.com/company-mode/company-mode
 #+begin_src emacs-lisp
     (use-package company
       :diminish
@@ -223,10 +222,10 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
              ("C-c i c" . company-complete)
              ("C-c i f" . company-files)
              ("C-c i y" . company-yasnippet)))
-
 #+end_src
 
 ** counsel
+https://github.com/abo-abo/swiper
 #+begin_src emacs-lisp
   (use-package counsel
     :diminish ivy-mode counsel-mode
@@ -243,6 +242,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** undo-tree
+https://www.dr-qubit.org/undo-tree.html
 #+begin_src emacs-lisp
   (use-package undo-tree
     :diminish
@@ -254,6 +254,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** which-key
+https://github.com/justbur/emacs-which-key
 #+begin_src emacs-lisp
   (use-package which-key
     :diminish
@@ -261,6 +262,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** hungry-delete
+https://github.com/nflath/hungry-delete
 #+begin_src emacs-lisp
   (use-package hungry-delete
     :bind
@@ -269,14 +271,17 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** paredit
+- [[http://danmidwood.com/content/2014/11/21/animated-paredit.html][The Animated Guide to Paredit]]
+- https://melpa.org/#/paredit
 #+begin_src emacs-lisp
   (use-package paredit
-     :diminish
-     :hook ((lisp-mode racket-mode emacs-lisp-mode sly-mrepl-mode slime-repl-mode) . enable-paredit-mode))
+    :diminish
+    :hook ((lisp-mode racket-mode emacs-lisp-mode sly-mrepl-mode slime-repl-mode racket-repl-mode) . enable-paredit-mode))
 #+end_src
 
 ** COMMENT smartparens
 不知道为啥把 hook 去了 启动的时候按键绑定就不生效了。暂时先不研究了。
+- https://github.com/Fuco1/smartparens
 #+begin_src emacs-lisp
   (use-package smartparens
     :hook ((lisp-mode racket-mode emacs-lisp-mode) . sp-use-smartparens-bindings)
@@ -289,17 +294,20 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** rainbow-delimiters
+https://github.com/Fanael/rainbow-delimiters
 #+begin_src emacs-lisp
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
 ** elpa-mirror
+https://github.com/redguardtoo/elpa-mirror
 #+begin_src emacs-lisp
   (use-package elpa-mirror)
 #+end_src
 
 ** keyfreq
+https://github.com/dacap/keyfreq
 #+begin_src emacs-lisp
   (use-package keyfreq
     :hook ((after-init . keyfreq-mode))
@@ -308,12 +316,14 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** expand-region
+https://github.com/magnars/expand-region.el
 #+begin_src emacs-lisp
   (use-package expand-region
     :bind ("C-=" . er/expand-region))
 #+end_src
 
 ** avy
+https://github.com/abo-abo/avy
 #+begin_src emacs-lisp
   (use-package avy
     :bind (("C-:" . avy-goto-char)
@@ -326,6 +336,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** iedit
+https://github.com/victorhge/iedit
 #+begin_src emacs-lisp
   (use-package iedit
     :bind ("C-;" . iedit-mode))
@@ -333,18 +344,18 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 
 ** COMMENT dashboard
 配置从 [[https://www.reddit.com/r/emacs/comments/8i2ip7/emacs_dashboard_emacsclient/][这里]] 抄的
+- https://github.com/emacs-dashboard/emacs-dashboard
 #+begin_src emacs-lisp
   (use-package dashboard
     :defer nil
     :config
     (dashboard-setup-startup-hook))
 #+end_src
-** COMMENT provide
-#+begin_src emacs-lisp
-  (provide 'init-utils)
-#+end_src
+
 * init-tools
 ** git
+- https://magit.vc
+- https://github.com/magit/git-modes
 #+begin_src emacs-lisp
   (use-package magit
     :bind (("C-x g" . magit-status)))
@@ -353,6 +364,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** projectile
+- https://github.com/bbatsov/projectile
   #+begin_src emacs-lisp
     (use-package projectile
       :init
@@ -360,7 +372,11 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
       :bind (:map projectile-mode-map
                   ("C-c p" . projectile-command-map)))
   #+end_src
+
 ** yasnippet
+- https://github.com/joaotavora/yasnippet
+- https://github.com/AndreaCrotti/yasnippet-snippets
+- https://github.com/mkcms/ivy-yasnippet
 #+begin_src emacs-lisp
   (use-package yasnippet
     :defer nil
@@ -378,18 +394,17 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   (use-package ivy-yasnippet
     :bind (("M-s y" . ivy-yasnippet)))
 #+end_src
+
 ** COMMENT rg
+- https://github.com/dajva/rg.el
+- 替代品 https://github.com/manateelazycat/color-rg
 #+begin_src emacs-lisp
   (use-package rg)
 #+end_src
   
-** COMMENT provide
-#+begin_src emacs-lisp
-  (provide 'init-tools)
-#+end_src
-
 * init-program
 ** markdown
+https://github.com/jrblevin/markdown-mode
   #+begin_src emacs-lisp
     (use-package markdown-mode
       :mode (("README\\.md\\'" . gfm-mode)
@@ -398,8 +413,11 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     (use-package toc-org
       :hook ((org-mode markdown-mode) . toc-org-mode))
   #+end_src
+  
 ** TeX
 中文导出的配置抄的 [[https://github.com/zhcosin/dotemacs/blob/master/lisp/init-orgmode.el][这里]]
+- https://www.gnu.org/software/auctex/
+- https://github.com/cdominik/cdlatex
 #+begin_src emacs-lisp
   (use-package auctex
     :if *is-windows*)
@@ -425,24 +443,32 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** cc-mode
+https://github.com/google/styleguide/blob/gh-pages/google-c-style.el
 #+begin_src emacs-lisp
-  (setq c-default-style "bsd"
-        c-basic-offset 4)
+  (use-package google-c-style
+    :hook ((c-mode-common . google-set-c-style)
+           (c-mode-common . google-make-newline-indent)))
 #+end_src
 
 ** Lisp
 *** sly
+https://github.com/joaotavora/sly
 #+begin_src emacs-lisp
   (use-package sly
     :init
-    (setq inferior-lisp-program "sbcl"))
+    (setq inferior-lisp-program "sbcl")
+    :hook (lisp-mode . sly))
 #+end_src
+
 *** racket
+https://racket-mode.com
 #+begin_src emacs-lisp
   (use-package racket-mode
     :hook ((racket-mode . racket-xp-mode)))
 #+end_src
+
 *** COMMENT slime
+https://slime.common-lisp.dev
 #+begin_src emacs-lisp
   (use-package slime
     :init
@@ -450,11 +476,12 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
           slime-complete-symbol-function 'slime-fuzzy-complete-symbol
           slime-description-autofocus t
           slime-contribs '(slime-fancy slime-repl))
-    (add-hook 'slime-repl-mode-hook #'(lambda () (define-key slime-repl-mode-map [(backspace)] #'paredit-backward-delete)
-  )))
+    (add-hook 'slime-repl-mode-hook
+              #'(lambda () (define-key slime-repl-mode-map [(backspace)] #'paredit-backward-delete))))
 #+end_src
 
-** haskell
+** COMMENT haskell
+https://github.com/haskell/haskell-mode
 #+begin_src emacs-lisp
   (use-package haskell-mode)
 #+end_src
@@ -466,6 +493,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
 #+end_src
 
 ** COMMENT elpy
+https://github.com/jorgenschaefer/elpy
 #+begin_src emacs-lisp
   (setq python-shell-interpreter "ipython"
         python-shell-interpreter-args "-i --simple-prompt")
@@ -479,6 +507,8 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
                                       'elpy-yapf-fix-code nil t)))
 #+end_src
 ** COMMENT web
+- https://github.com/fxbois/web-mode
+- https://github.com/mooz/js2-mode
 #+begin_src emacs-lisp
   (use-package web-mode
     :mode ("\\.html\\'" . web-mode))
@@ -487,12 +517,9 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     :mode ("\\.js\\'" . js2-mode))
 #+end_src
 
-** COMMENT provide
-#+begin_src emacs-lisp
-  (provide 'init-program)
-#+end_src
 * init-evil
 ** evil
+- https://github.com/emacs-evil/evil
 #+begin_src emacs-lisp
  (use-package evil
     :hook ((prog-mode text-mode)  . evil-local-mode)
@@ -507,19 +534,8 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
       (kbd "TAB") 'org-cycle))
 #+end_src
 
-** COMMENT evil-escape
-
-#+begin_src emacs-lisp
-  (use-package evil-escape
-    :hook (after-init . evil-escape-mode)
-    ;; :after (evil)
-    :config
-    (setq-default evil-escape-delay 0.3)
-    (setq-default evil-escape-key-sequence "jk")
-    (setq evil-escape-excluded-major-modes '(help-mode)))
-#+end_src
-
 ** general
+- https://github.com/noctuid/general.el
 #+begin_src emacs-lisp
   (use-package general)
   (general-evil-setup)
@@ -528,13 +544,15 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     (general-key-dispatch 'self-insert-command
       :timeout 0.25
       "k" 'evil-normal-state))
-  
+
   (general-define-key 
    :prefix "SPC"
    :states '(normal visual)
    "s" 'avy-goto-char-2
    "t" 'org-babel-tangle
-   "a" 'org-agenda)
+   "a" 'org-agenda
+   "b" 'evil-prev-buffer
+   "f" 'evil-next-buffer)
 
   (general-define-key 
    :prefix ";"
@@ -542,33 +560,30 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
    ";" 'avy-goto-char-2)
 #+end_src
 * init-ui
-** UI
+一些视觉和功能方面的调整
+** 保存，删除相关
 [[https://www.bilibili.com/read/cv13719366][自动保存]]
+注意在 evil 处也配置了返回normal状态时自动保存
 #+begin_src emacs-lisp
-  (setq default-directory "~/")
   (setq delete-by-moving-to-trash t)
-  (setq ring-bell-function 'ignore)
-  (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
   ;; (setq make-backup-files nil)
-  (global-set-key (kbd "<f5>") 'revert-buffer)
-  (global-set-key (kbd "C-x C-b") 'ibuffer)
-  (global-set-key (kbd "C-.") 'imenu)
-
-  ;; (fset 'yes-or-no-p 'y-or-n-p)
-  (define-key y-or-n-p-map [return] 'act)
-  (setq use-short-answers t)
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+  ;; (save-place-mode 1) ;; 记住文件关闭的时候的位置
 
   (add-function :after after-focus-change-function
                 (lambda () (save-some-buffers t)))
-
-  ;; (save-place-mode 1)
-
-  (use-package delsel
-    :ensure nil
-    :hook (after-init . delete-selection-mode))
 #+end_src
-** TUI
+
+** 更短的yes or no
 #+begin_src emacs-lisp
+  ;; (fset 'yes-or-no-p 'y-or-n-p)
+  (define-key y-or-n-p-map [return] 'act)
+  (setq use-short-answers t)
+#+end_src
+
+** 视觉，听觉方面调整
+#+begin_src emacs-lisp
+  (setq ring-bell-function 'ignore)
   (setq inhibit-splash-screen 1)
   (setq initial-scratch-message ";; Never gonna give you up ~\n\n")
 
@@ -578,13 +593,28 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   (show-paren-mode 1)
 
   (global-display-line-numbers-mode)
-  (winner-mode 1)
-  (column-number-mode 1)
+  (column-number-mode 1) ;; 在modeline里显示列号
+#+end_src
 
+** UI
+#+begin_src emacs-lisp
+  (setq default-directory "~/")
+  (global-set-key (kbd "<f5>") 'revert-buffer)
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  (global-set-key (kbd "C-.") 'imenu)
+
+  (use-package delsel
+    :ensure nil
+    :hook (after-init . delete-selection-mode))
+
+  (winner-mode 1)
+
+  ;; 关于tab的一些调整
   (setq-default tab-width 4
                 indent-tabs-mode nil)
 #+end_src
-** GUI
+
+** font
 真的不知道该怎么设置……  为了让 daemon 模式下字体设置也生效，就简单粗暴地直接设定 default-frame-alist 了。由于 Linux 目前上用的是 emacs-nox，所以只让这个设定在 windows 上生效。
 #+begin_src emacs-lisp
   (use-package emacs
@@ -605,6 +635,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     :config
     (menu-bar-mode -1))
 #+end_src
+
 ** theme
 #+begin_src emacs-lisp
   (use-package doom-themes
@@ -612,6 +643,7 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     :defer nil
     :config (load-theme 'doom-city-lights t))
 #+end_src
+
 ** COMMENT doom-modeline
 #+begin_src emacs-lisp
   (use-package doom-modeline
@@ -621,10 +653,6 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
     (setq doom-modeline-bar-width -1))
 #+end_src
 
-** COMMENT provide
-#+begin_src emacs-lisp
-  (provide 'init-ui)
-#+end_src
 * COMMENT init-eglot
 #+begin_src emacs-lisp
   (use-package eglot
@@ -634,25 +662,22 @@ org-link参数的修改看 [[https://www.reddit.com/r/emacs/comments/oggf1d/what
   (add-hook 'eglot-managed-mode-hook (lambda () (add-hook 'before-save-hook 'eglot-format nil t)))
   (add-hook 'c-mode-common-hook 'eglot-ensure)
   ;;(add-hook 'c-mode-common-hook (lambda () (add-hook 'before-save-hook 'eglot-format nil t)))
-
 #+end_src
-* COMMENT init-lsp
+
+* init-lsp
 #+begin_src emacs-lisp
   (use-package lsp-mode
     :init
-    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     (setq lsp-keymap-prefix "C-c l")
-    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-           (python-mode . lsp)
-           ;; if you want which-key integration
-           (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp)
+    :hook ((c-mode-common . lsp)
+           (lsp-mode . lsp-enable-which-key-integration)))
 
-  ;;(use-package lsp-ui :commands lsp-ui-mode)
+  (defun lsp-format-before-save ()
+    (add-hook 'before-save-hook #'lsp-format-buffer 0 t))
 
-  ;;(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-  ;;(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+  (add-hook 'lsp-mode-hook #'lsp-format-before-save)
 #+end_src
+
 * COMMENT runemacs.bat
 ** 方案1
 最开始的方案是在bat文件里指定HOME目录
@@ -675,12 +700,17 @@ run C:\portable\emacs-master-x86_64-full\bin\runemacs.exe --daemon, ,Hide
 #+end_src
 
 在守护进程运行之后，将emacsclientw.exe右键发送到桌面快捷方式，之后在 属性-目标 中加上 -c 即可
+
 ** 方案3
 https://emacstalk.github.io/post/020/
 用这样一组参数
-emacsclient -a "" -c -n "$@"
+#+begin_src bash
+  emacsclient -a "" -c -n "$@"
+#+end_src
 不过直接用在windows上好像有问题，把最后的 "$@" 去掉，然后创建一个快捷方式即可正常使用
 
 这个 alias 在 linux 终端使用
-alias e="emacsclient -c -a \"\""
+#+begin_src bash
+  alias e="emacsclient -c -a \"\""
+#+end_src
 
